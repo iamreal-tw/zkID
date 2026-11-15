@@ -767,13 +767,13 @@ uint get_main_input_signal_start() {return 2;}
 
 uint get_main_input_signal_no() {return 1741;}
 
-uint get_total_signal_no() {return 7715320;}
+uint get_total_signal_no() {return 7732229;}
 
-uint get_number_of_components() {return 118935;}
+uint get_number_of_components() {return 122011;}
 
 uint get_size_of_input_hashmap() {return 256;}
 
-uint get_size_of_witness() {return 2026417;}
+uint get_size_of_witness() {return 2031022;}
 
 uint get_size_of_constants() {return 827;}
 
@@ -108894,7 +108894,7 @@ ctx->componentMemory[coffset].signalStart = soffset;
 ctx->componentMemory[coffset].inputCounter = 1741;
 ctx->componentMemory[coffset].componentName = componentName;
 ctx->componentMemory[coffset].idFather = componentFather;
-ctx->componentMemory[coffset].subcomponents = new uint[19]{0};
+ctx->componentMemory[coffset].subcomponents = new uint[21]{0};
 }
 
 void CertChainRSA256_182_run(uint ctx_index,Circom_CalcWit* ctx){
@@ -108982,44 +108982,44 @@ VerifyPrimaryCard_40_create(mySignalStart+7548915,95933+ctx_index+1,ctx,new_cmp_
 mySubcomponents[3] = 95933+ctx_index+1;
 }
 {
-std::string new_cmp_name = "AssertSliceInTBS_155_6252";
+std::string new_cmp_name = "AssertSliceInTBS_166_6767";
 AssertSliceInTBS_36_create(mySignalStart+1867,12+ctx_index+1,ctx,new_cmp_name,myId);
 mySubcomponents[4] = 12+ctx_index+1;
 }
 {
-std::string new_cmp_name = "ExtractModulus_158_6375";
+std::string new_cmp_name = "ExtractModulus_169_6890";
 ExtractModulus_46_create(mySignalStart+5426816,68117+ctx_index+1,ctx,new_cmp_name,myId);
 mySubcomponents[5] = 68117+ctx_index+1;
 }
 {
-std::string new_cmp_name = "CertRSA256Verify_164_6549";
+std::string new_cmp_name = "CertRSA256Verify_175_7064";
 CertRSA256Verify_165_create(mySignalStart+1920,18+ctx_index+1,ctx,new_cmp_name,myId);
 mySubcomponents[6] = 18+ctx_index+1;
 }
 {
-std::string new_cmp_name = "SMTNonMembershipVerifier_171_6706";
+std::string new_cmp_name = "SMTNonMembershipVerifier_182_7221";
 SMTNonMembershipVerifier_180_create(mySignalStart+7414450,69674+ctx_index+1,ctx,new_cmp_name,myId);
 mySubcomponents[7] = 69674+ctx_index+1;
 }
 {
 std::string new_cmp_name = "tlRange";
-Num2Bits_0_create(mySignalStart+7711677,118841+ctx_index+1,ctx,new_cmp_name,myId);
-mySubcomponents[8] = 118841+ctx_index+1;
+Num2Bits_0_create(mySignalStart+7728586,121917+ctx_index+1,ctx,new_cmp_name,myId);
+mySubcomponents[8] = 121917+ctx_index+1;
 }
 {
 std::string new_cmp_name = "tbsLenLB";
-LessEqThan_3_create(mySignalStart+7711634,118835+ctx_index+1,ctx,new_cmp_name,myId);
-mySubcomponents[9] = 118835+ctx_index+1;
+LessEqThan_3_create(mySignalStart+7728543,121911+ctx_index+1,ctx,new_cmp_name,myId);
+mySubcomponents[9] = 121911+ctx_index+1;
 }
 {
 std::string new_cmp_name = "tbsLenUB";
-LessEqThan_6_create(mySignalStart+7711655,118838+ctx_index+1,ctx,new_cmp_name,myId);
-mySubcomponents[10] = 118838+ctx_index+1;
+LessEqThan_6_create(mySignalStart+7728564,121914+ctx_index+1,ctx,new_cmp_name,myId);
+mySubcomponents[10] = 121914+ctx_index+1;
 }
 {
 std::string new_cmp_name = "validity";
-VerifyValidity_33_create(mySignalStart+7711691,118842+ctx_index+1,ctx,new_cmp_name,myId);
-mySubcomponents[11] = 118842+ctx_index+1;
+VerifyValidity_33_create(mySignalStart+7728600,121918+ctx_index+1,ctx,new_cmp_name,myId);
+mySubcomponents[11] = 121918+ctx_index+1;
 }
 {
 std::string new_cmp_name = "locate";
@@ -109045,9 +109045,19 @@ aux_cmp_num += 3075;
 }
 }
 {
+std::string new_cmp_name = "modTopByte";
+ItemAtIndex_10_create(mySignalStart+7693947,115307+ctx_index+1,ctx,new_cmp_name,myId);
+mySubcomponents[18] = 115307+ctx_index+1;
+}
+{
+std::string new_cmp_name = "modTopBits";
+Num2Bits_24_create(mySignalStart+7693938,115306+ctx_index+1,ctx,new_cmp_name,myId);
+mySubcomponents[19] = 115306+ctx_index+1;
+}
+{
 std::string new_cmp_name = "pkHash";
-ChunkedPoseidonP256_181_create(mySignalStart+7693938,115306+ctx_index+1,ctx,new_cmp_name,myId);
-mySubcomponents[18] = 115306+ctx_index+1;
+ChunkedPoseidonP256_181_create(mySignalStart+7710847,118382+ctx_index+1,ctx,new_cmp_name,myId);
+mySubcomponents[20] = 118382+ctx_index+1;
 }
 {
 uint cmp_index_ref = 8;
@@ -109637,9 +109647,59 @@ Fr_copy(aux_dest,&expaux[0]);
 Fr_lt(&expaux[0],&lvar[19],&circuitConstants[20]); // line circom 147
 }
 {
+uint cmp_index_ref = 18;
+{
+PFrElement aux_dest = &ctx->signalValues[ctx->componentMemory[mySubcomponents[cmp_index_ref]].signalStart + 1];
+// load src
+// end load src
+Fr_copyn(aux_dest,&signalValues[mySignalStart + 37],1536);
+}
+// no need to run sub component
+ctx->componentMemory[mySubcomponents[cmp_index_ref]].inputCounter -= 1536;
+assert(ctx->componentMemory[mySubcomponents[cmp_index_ref]].inputCounter > 0);
+}
+{
+uint cmp_index_ref = 18;
+{
+PFrElement aux_dest = &ctx->signalValues[ctx->componentMemory[mySubcomponents[cmp_index_ref]].signalStart + 1537];
+// load src
+Fr_add(&expaux[0],&signalValues[mySignalStart + 1742],&circuitConstants[16]); // line circom 160
+// end load src
+Fr_copy(aux_dest,&expaux[0]);
+}
+// need to run sub component
+ctx->componentMemory[mySubcomponents[cmp_index_ref]].inputCounter -= 1;
+assert(!(ctx->componentMemory[mySubcomponents[cmp_index_ref]].inputCounter));
+ItemAtIndex_10_run(mySubcomponents[cmp_index_ref],ctx);
+}
+{
+uint cmp_index_ref = 19;
+{
+PFrElement aux_dest = &ctx->signalValues[ctx->componentMemory[mySubcomponents[cmp_index_ref]].signalStart + 8];
+// load src
+cmp_index_ref_load = 18;
+cmp_index_ref_load = 18;
+// end load src
+Fr_copy(aux_dest,&ctx->signalValues[ctx->componentMemory[mySubcomponents[18]].signalStart + 0]);
+}
+// need to run sub component
+ctx->componentMemory[mySubcomponents[cmp_index_ref]].inputCounter -= 1;
+assert(!(ctx->componentMemory[mySubcomponents[cmp_index_ref]].inputCounter));
+Num2Bits_24_run(mySubcomponents[cmp_index_ref],ctx);
+}
+{
+cmp_index_ref_load = 19;
+cmp_index_ref_load = 19;
+{{
+Fr_eq(&expaux[0],&ctx->signalValues[ctx->componentMemory[mySubcomponents[19]].signalStart + 7],&circuitConstants[2]); // line circom 163
+}}
+if (!Fr_isTrue(&expaux[0])) std::cout << "Failed assert in template/function " << myTemplateName << " line 163. " <<  "Followed trace of components: " << ctx->getTrace(myId) << std::endl;
+assert(Fr_isTrue(&expaux[0]));
+}
+{
 PFrElement aux_dest = &signalValues[mySignalStart + 1743];
 // load src
-Fr_add(&expaux[0],&signalValues[mySignalStart + 1742],&circuitConstants[16]); // line circom 154
+Fr_add(&expaux[0],&signalValues[mySignalStart + 1742],&circuitConstants[16]); // line circom 165
 // end load src
 Fr_copy(aux_dest,&expaux[0]);
 }
@@ -109853,10 +109913,10 @@ PFrElement aux_dest = &lvar[19];
 // end load src
 Fr_copy(aux_dest,&circuitConstants[1]);
 }
-Fr_lt(&expaux[0],&lvar[19],&circuitConstants[24]); // line circom 182
+Fr_lt(&expaux[0],&lvar[19],&circuitConstants[24]); // line circom 193
 while(Fr_isTrue(&expaux[0])){
 {
-uint cmp_index_ref = 18;
+uint cmp_index_ref = 20;
 {
 PFrElement aux_dest = &ctx->signalValues[ctx->componentMemory[mySubcomponents[cmp_index_ref]].signalStart + ((1 * Fr_toInt(&lvar[19])) + 1)];
 // load src
@@ -109870,14 +109930,14 @@ assert(ctx->componentMemory[mySubcomponents[cmp_index_ref]].inputCounter > 0);
 {
 PFrElement aux_dest = &lvar[19];
 // load src
-Fr_add(&expaux[0],&lvar[19],&circuitConstants[2]); // line circom 182
+Fr_add(&expaux[0],&lvar[19],&circuitConstants[2]); // line circom 193
 // end load src
 Fr_copy(aux_dest,&expaux[0]);
 }
-Fr_lt(&expaux[0],&lvar[19],&circuitConstants[24]); // line circom 182
+Fr_lt(&expaux[0],&lvar[19],&circuitConstants[24]); // line circom 193
 }
 {
-uint cmp_index_ref = 18;
+uint cmp_index_ref = 20;
 {
 PFrElement aux_dest = &ctx->signalValues[ctx->componentMemory[mySubcomponents[cmp_index_ref]].signalStart + 18];
 // load src
@@ -109892,12 +109952,12 @@ ChunkedPoseidonP256_181_run(mySubcomponents[cmp_index_ref],ctx);
 {
 PFrElement aux_dest = &signalValues[mySignalStart + 0];
 // load src
-cmp_index_ref_load = 18;
-cmp_index_ref_load = 18;
+cmp_index_ref_load = 20;
+cmp_index_ref_load = 20;
 // end load src
-Fr_copy(aux_dest,&ctx->signalValues[ctx->componentMemory[mySubcomponents[18]].signalStart + 0]);
+Fr_copy(aux_dest,&ctx->signalValues[ctx->componentMemory[mySubcomponents[20]].signalStart + 0]);
 }
-for (uint i = 0; i < 19; i++){
+for (uint i = 0; i < 21; i++){
 uint index_subc = ctx->componentMemory[ctx_index].subcomponents[i];
 if (index_subc != 0){
 assert(!(ctx->componentMemory[index_subc].inputCounter));

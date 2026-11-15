@@ -151,6 +151,17 @@ template CertChainRSA256(
         modPrefixCheck[i].out === modPrefixBytes[i];
     }
 
+    // The key is exactly 2048 bits: the first modulus byte has its top bit
+    // set. The pinned prefix fixes only the encoded length; a shorter key
+    // written with leading zero bytes fits it too, and UserSigRSA256 does not
+    // check the key length either.
+    component modTopByte = ItemAtIndex(maxMessageLength);
+    modTopByte.in <== issuerTbs;
+    modTopByte.index <== tbsModulusTagOffset + 5;
+    component modTopBits = Num2Bits(8);
+    modTopBits.in <== modTopByte.out;
+    modTopBits.out[7] === 1;
+
     signal tbsModulusOffset <== tbsModulusTagOffset + 5;
     AssertSliceInTBS()(tbsModulusOffset, modulusBytes, actualIssuerTbsLength);
 

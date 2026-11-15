@@ -125,7 +125,7 @@ circuit, never supplied by the prover:
 | `p3 = p1 + 17 + NN`            | `30 1e 17 0d <12 digits> 5a 17 0d <12 digits> 5a` | tags pinned, digits range-checked |
 | `p3 + 32`                      | `30 SS` or `30 81 SS` subject Name      | `SS < 128`, or `81` with `SS >= 128` |
 | `q` = end of subject Name      | 28-byte head of an RSA-2048 `SubjectPublicKeyInfo` | pinned                  |
-| `q + 28`                       | `02 82 01 01 00` modulus INTEGER        | pinned; 256 modulus bytes follow   |
+| `q + 28`                       | `02 82 01 01 00` modulus INTEGER        | pinned; 256 modulus bytes follow, the first `>= 0x80` |
 | `e = q + 289`                  | `02 03 01 00 01` public exponent        | pinned (65537)                     |
 | `e + 5`                        | `a3 82 hh ll 30 82 hh ll` Extensions    | tags pinned                        |
 | `e + 13`                       | `30 1f 06 03 55 1d 23 04 18 30 16 80 14 <20>` authorityKeyIdentifier | header pinned |
@@ -151,7 +151,10 @@ Limits, all of which fail closed:
   the integer comparison would otherwise treat as later than any 20YY date.
 - An issuer Name longer than 127 content bytes is rejected.
 - A subject Name longer than 255 content bytes is rejected.
-- A subject key that is not 2048-bit RSA is rejected.
+- A subject key that is not 2048-bit RSA is rejected. That includes a shorter
+  key written into the 256 modulus bytes with leading zeros: the first modulus
+  byte must have its top bit set. `UserSigRSA256` does not check the key
+  length; it relies on this check through `pkCommit`.
 - A TBS without the explicit v3 version block is rejected.
 - See §"Key usage" for the limits on extensions.
 

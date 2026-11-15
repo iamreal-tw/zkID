@@ -190,6 +190,22 @@ export function makeUserSpki(modulusLength = 2048): Buffer {
   return publicKey.export({ format: "der", type: "spki" });
 }
 
+/**
+ * SubjectPublicKeyInfo in the layout of a 2048-bit RSA key (exponent 65537)
+ * around any 256 modulus bytes, so a test can write a shorter modulus there.
+ */
+export function spkiOfModulusBytes(modulus: Uint8Array): Buffer {
+  if (modulus.length !== 256) throw new Error("256 modulus bytes");
+  return Buffer.concat([
+    Buffer.from(
+      "30820122300d06092a864886f70d01010105000382010f003082010a0282010100",
+      "hex"
+    ),
+    modulus,
+    Buffer.from("0203010001", "hex"),
+  ]);
+}
+
 export interface TbsOptions {
   /** Include the `[0] EXPLICIT` v3 version block. Default true. */
   version?: boolean;

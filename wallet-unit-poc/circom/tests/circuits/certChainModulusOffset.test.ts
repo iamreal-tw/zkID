@@ -7,6 +7,7 @@
  */
 import { WitnessTester } from "circomkit";
 import assert from "node:assert";
+import { generateKeyPairSync } from "node:crypto";
 import { circomkit } from "../common";
 import {
   buildTbs,
@@ -15,6 +16,7 @@ import {
   makeUserSpki,
   name,
   opaqueExtension,
+  spkiOfModulusBytes,
   type TbsOptions,
   type TestCa,
 } from "../common/testCert";
@@ -80,6 +82,50 @@ describe("CertChainRSA256 structure-derived modulus offset", function () {
 
     it("a 4096-bit RSA subject key", async function () {
       await circuit.expectFail(inputs({ spki: makeUserSpki(4096) }) as any);
+    });
+  });
+
+  // The pinned `02 82 01 01 00` fixes the encoded length of the modulus, not
+  // the size of the key: only the top bit of the first modulus byte does.
+  describe("requires the subject key to be exactly 2048 bits", function () {
+    /** The 256 modulus bytes of a 2048-bit key, with the first byte replaced. */
+    function withFirstByte(first: number): Buffer {
+      const m = Buffer.from(spki.subarray(33, 33 + 256));
+      m[0] = first;
+      return spkiOfModulusBytes(m);
+    }
+
+    it("the layout helper rebuilds the SPKI Node exports", function () {
+      assert.ok(spkiOfModulusBytes(spki.subarray(33, 33 + 256)).equals(spki));
+    });
+
+    it("accepts a first modulus byte of 0x80", async function () {
+      await accepts(inputs({ spki: withFirstByte(0x80) }));
+    });
+
+    it("rejects a first modulus byte of 0x7f", async function () {
+      await circuit.expectFail(inputs({ spki: withFirstByte(0x7f) }) as any);
+    });
+
+    it("rejects a 2047-bit key written into 256 bytes", async function () {
+      const { publicKey } = generateKeyPairSync("rsa", {
+        modulusLength: 2047,
+        publicExponent: 65537,
+      });
+      const n = Buffer.from(publicKey.export({ format: "jwk" }).n as string, "base64url");
+      assert.strictEqual(n.length, 256);
+      assert.ok(n[0] < 0x80);
+      await circuit.expectFail(inputs({ spki: spkiOfModulusBytes(n) }) as any);
+    });
+
+    it("rejects a 1024-bit key written with leading zeros", async function () {
+      const { publicKey } = generateKeyPairSync("rsa", {
+        modulusLength: 1024,
+        publicExponent: 65537,
+      });
+      const n = Buffer.from(publicKey.export({ format: "jwk" }).n as string, "base64url");
+      const padded = Buffer.concat([Buffer.alloc(256 - n.length), n]);
+      await circuit.expectFail(inputs({ spki: spkiOfModulusBytes(padded) }) as any);
     });
   });
 
