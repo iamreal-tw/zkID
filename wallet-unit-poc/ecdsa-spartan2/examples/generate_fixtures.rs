@@ -152,8 +152,9 @@ fn generate_ca_cert(ca_key: &RsaPrivateKey, serial_hex: &str) -> Result<x509_cer
 /// Builds the user certificate by hand rather than through
 /// `CertificateBuilder`, so the extensions follow the order of a real MOICA
 /// end-entity certificate: authorityKeyIdentifier, subjectKeyIdentifier,
-/// keyUsage (critical, digitalSignature only), then the rest. The cert-chain
-/// circuit walks to keyUsage structurally and rejects any other layout.
+/// keyUsage (critical, digitalSignature only), certificatePolicies,
+/// subjectDirectoryAttributes, then the rest. The cert-chain circuit walks
+/// these five structurally and rejects any other layout.
 fn generate_user_cert(
     user_key: &RsaPrivateKey,
     ca_key: &RsaPrivateKey,
@@ -192,14 +193,32 @@ fn generate_user_cert(
             true,
             &KeyUsage(KeyUsages::DigitalSignature.into()),
         )?,
-        // Stands in for the certificatePolicies, subjectDirectoryAttributes,
-        // cRLDistributionPoints and authorityInfoAccess extensions of a real
-        // certificate. Those run to several hundred bytes, which puts the
-        // Extensions length in the two-byte long form the circuit expects.
+        // certificatePolicies: MOICA's assurance level 3 policy
+        // (2.16.886.101.0.3.3).
+        Extension {
+            extn_id: ObjectIdentifier::new_unwrap("2.5.29.32"),
+            critical: false,
+            extn_value: OctetString::new(hex::decode("300b3009060760867665000303")?)?,
+        },
+        // subjectDirectoryAttributes of a primary-card certificate:
+        // subjectType = citizen, tailOfPersonalID = "1234", no cardHolderRank.
+        Extension {
+            extn_id: ObjectIdentifier::new_unwrap("2.5.29.9"),
+            critical: false,
+            extn_value: OctetString::new(hex::decode(concat!(
+                "302a",
+                "3015060760867601640201310a06086086760164030101",
+                "3011060760867601640233310 60c0431323334",
+            ).replace(' ', ""))?)?,
+        },
+        // Stands in for the cRLDistributionPoints and authorityInfoAccess
+        // extensions of a real certificate. Those run to a few hundred bytes,
+        // which puts the Extensions length in the two-byte long form the
+        // circuit expects.
         Extension {
             extn_id: ObjectIdentifier::new_unwrap("1.3.6.1.4.1.99999.1"),
             critical: false,
-            extn_value: OctetString::new(vec![0xcc; 240])?,
+            extn_value: OctetString::new(vec![0xcc; 200])?,
         },
     ];
 

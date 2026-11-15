@@ -549,10 +549,12 @@ template LocateModulus() {
 template VerifyKeyUsage() {
     signal input tbs[1024];
     signal input modulusTagOffset;
+    // The 75 bytes after keyUsage, for VerifyPrimaryCard.
+    signal output next[75];
 
-    // e <= 493 + 261 = 754; e + 93 <= 847 < 1024.
+    // e <= 493 + 261 = 754; e + 168 <= 922 < 1024.
     signal e <== modulusTagOffset + 261;
-    component tail = VarShiftLeft(1024, 93);
+    component tail = VarShiftLeft(1024, 168);
     for (var i = 0; i < 1024; i++) {
         tail.in[i] <== tbs[i];
     }
@@ -587,5 +589,56 @@ template VerifyKeyUsage() {
                         0xff, 0x04, 0x04, 0x03, 0x02, 0x07, 0x80];
     for (var i = 0; i < 16; i++) {
         tail.out[77 + i] === keyUsage[i];
+    }
+
+    for (var i = 0; i < 75; i++) {
+        next[i] <== tail.out[93 + i];
+    }
+}
+
+// Requires the certificate to be a citizen's primary-card certificate.
+//
+// A MOICA citizen certificate carries, in subjectDirectoryAttributes, an
+// optional attribute cardHolderRank (2.16.886.1.100.2.2) with the value
+// "secondary" (a secondary card) or "mobile" (a mobile certificate). A
+// primary card's certificate does not have it (GPKI Certificate and CRL
+// Profiles v2.4, section 1.3.18). Each of those certificates has its own key,
+// so one person holding several would get several nullifiers per app.
+//
+// In a primary-card certificate the two extensions after keyUsage have a
+// fixed layout and length:
+//
+//   certificatePolicies     30 14 06 03 55 1d 20 04 0d 30 0b 30 09
+//                           06 07 60 86 76 65 00 03 03          (22 bytes)
+//   subjectDirectoryAttributes
+//                           30 33 06 03 55 1d 09 04 2c 30 2a
+//     subjectType = citizen 30 15 06 07 60 86 76 01 64 02 01
+//                           31 0a 06 08 60 86 76 01 64 03 01 01
+//     tailOfPersonalID      30 11 06 07 60 86 76 01 64 02 33
+//                           31 06 0c 04 <4 bytes>               (53 bytes)
+//
+// Pinning every byte except the 4-byte tailOfPersonalID value fixes the
+// length of subjectDirectoryAttributes at exactly these two attributes, so
+// there is no room for cardHolderRank. The policy OID is MOICA's assurance
+// level 3 policy; a certificate under another policy is rejected.
+//
+// subjectType must be citizen (2.16.886.1.100.3.1.1). Certificates issued to
+// alien residents (...3.1.9, section 1.3.19) have the same layout and are
+// rejected by this one byte.
+template VerifyPrimaryCard() {
+    signal input ext[75];
+
+    var expected[71] = [
+        0x30, 0x14, 0x06, 0x03, 0x55, 0x1d, 0x20, 0x04, 0x0d, 0x30, 0x0b,
+        0x30, 0x09, 0x06, 0x07, 0x60, 0x86, 0x76, 0x65, 0x00, 0x03, 0x03,
+        0x30, 0x33, 0x06, 0x03, 0x55, 0x1d, 0x09, 0x04, 0x2c, 0x30, 0x2a,
+        0x30, 0x15, 0x06, 0x07, 0x60, 0x86, 0x76, 0x01, 0x64, 0x02, 0x01,
+        0x31, 0x0a, 0x06, 0x08, 0x60, 0x86, 0x76, 0x01, 0x64, 0x03, 0x01,
+        0x01,
+        0x30, 0x11, 0x06, 0x07, 0x60, 0x86, 0x76, 0x01, 0x64, 0x02, 0x33,
+        0x31, 0x06, 0x0c, 0x04
+    ];
+    for (var i = 0; i < 71; i++) {
+        ext[i] === expected[i];
     }
 }

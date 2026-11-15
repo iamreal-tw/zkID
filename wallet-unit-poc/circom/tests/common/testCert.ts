@@ -67,9 +67,9 @@ const SIG_ALG_SHA256_RSA = Buffer.from(
   "hex"
 );
 
-// The first three extensions of a MOICA end-entity certificate, in MOICA's
+// The first five extensions of a MOICA end-entity certificate, in MOICA's
 // order: authorityKeyIdentifier (keyIdentifier only), subjectKeyIdentifier,
-// keyUsage (critical).
+// keyUsage (critical), certificatePolicies, subjectDirectoryAttributes.
 export const AUTHORITY_KEY_ID = Buffer.concat([
   Buffer.from("301f0603551d23041830168014", "hex"),
   Buffer.alloc(20, 0xa1),
@@ -95,6 +95,62 @@ export function keyUsage(bits: string): Buffer {
 export const KEY_USAGE_SIGNING = keyUsage("0780");
 /** `04 30`: keyEncipherment + dataEncipherment — MOICA's encryption certificate. */
 export const KEY_USAGE_ENCRYPTION = keyUsage("0430");
+
+/** certificatePolicies with MOICA's assurance level 3 policy OID. */
+export const CERT_POLICIES = Buffer.from(
+  "30140603551d20040d300b3009060760867665000303",
+  "hex"
+);
+
+/** subjectType attribute; the last value byte is 01 (citizen) or 09 (alien resident). */
+function subjectType(kind: number): Buffer {
+  return Buffer.concat([
+    Buffer.from("3015060760867601640201310a060860867601640301", "hex"),
+    Buffer.from([kind]),
+  ]);
+}
+
+/** id-chtpki-at-cardHolderRank (2.16.886.1.100.2.2) with a PrintableString. */
+export function cardHolderRank(value: string): Buffer {
+  return tlv(
+    0x30,
+    Buffer.concat([
+      Buffer.from("06076086760164020 2".replace(/ /g, ""), "hex"),
+      tlv(0x31, tlv(0x13, Buffer.from(value, "ascii"))),
+    ])
+  );
+}
+
+/**
+ * subjectDirectoryAttributes: subjectType = citizen, tailOfPersonalID, then
+ * any `extraAttributes`. A primary card's certificate has no extra attribute.
+ */
+export function subjectDirectoryAttributes(
+  tail = "1234",
+  extraAttributes: Buffer[] = [],
+  tailFirst = false,
+  subjectKind = 0x01
+): Buffer {
+  const tailAttr = tlv(
+    0x30,
+    Buffer.concat([
+      Buffer.from("060760867601640233", "hex"),
+      tlv(0x31, tlv(0x0c, Buffer.from(tail, "utf8"))),
+    ])
+  );
+  const attrs = tailFirst
+    ? [tailAttr, subjectType(subjectKind)]
+    : [subjectType(subjectKind), tailAttr];
+  return tlv(
+    0x30,
+    Buffer.concat([
+      Buffer.from("0603551d09", "hex"),
+      tlv(0x04, tlv(0x30, Buffer.concat([...attrs, ...extraAttributes]))),
+    ])
+  );
+}
+
+export const SUBJECT_DIR_ATTRS = subjectDirectoryAttributes();
 
 /** `[3] EXPLICIT Extensions` holding `list`. */
 function extensions(list: Buffer[]): Buffer {
@@ -143,7 +199,9 @@ export interface TbsOptions {
   notAfter?: string;
   subject?: Buffer;
   spki: Buffer;
-  /** Extensions to add after keyUsage. */
+  /** Replaces the two extensions after keyUsage (default: policies, SDA). */
+  holderExtensions?: Buffer[];
+  /** Extensions to add at the end. */
   extraExtensions?: Buffer[];
   /** Replaces the leading extensions (default: AKI, SKI, keyUsage signing). */
   leadingExtensions?: Buffer[];
@@ -173,6 +231,7 @@ export function buildTbs(opts: TbsOptions): Buffer {
         SUBJECT_KEY_ID,
         KEY_USAGE_SIGNING,
       ]),
+      ...(opts.holderExtensions ?? [CERT_POLICIES, SUBJECT_DIR_ATTRS]),
       // MOICA certificates carry several hundred bytes of further extensions
       // (policies, CRL and AIA URLs); pad so the Extensions length is in the
       // two-byte long form the circuit expects.

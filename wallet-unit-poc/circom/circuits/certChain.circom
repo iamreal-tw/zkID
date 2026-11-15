@@ -130,9 +130,13 @@ template CertChainRSA256(
         keyUsage.tbs[i] <== issuerTbs[i];
     }
     keyUsage.modulusTagOffset <== tbsModulusTagOffset;
-    // The 93 bytes VerifyKeyUsage reads must lie inside the signed TBS, not
+    // The 168 bytes VerifyKeyUsage reads must lie inside the signed TBS, not
     // in the SHA-256 padding after it.
-    AssertSliceInTBS()(tbsModulusTagOffset + 261, 93, actualIssuerTbsLength);
+    AssertSliceInTBS()(tbsModulusTagOffset + 261, 168, actualIssuerTbsLength);
+
+    // Primary-card certificates only: rejects secondary-card and mobile
+    // certificates, which give the same person further nullifiers.
+    VerifyPrimaryCard()(keyUsage.next);
 
     // DER prefix for an unsigned 2048-bit RSA modulus INTEGER:
     //   [0x02, 0x82, 0x01, 0x01, 0x00]

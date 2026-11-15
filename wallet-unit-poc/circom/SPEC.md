@@ -39,7 +39,9 @@ Circuit A and Circuit B are linked via `pkCommit`: the verifier checks
    `notBefore <= currentTime <= notAfter`. See §"Validity period" below.
 5. **Key usage** — `VerifyKeyUsage` asserts the certificate's keyUsage is
    exactly `digitalSignature`. See §"Key usage" below.
-6. **Linking** — `pkCommit = ChunkedPoseidonP256(userRsaExtractedModulus ‖ pkBlind)`,
+6. **Primary card** — `VerifyPrimaryCard` asserts the certificate is a
+   citizen's and has no `cardHolderRank` attribute. See §"Primary card" below.
+7. **Linking** — `pkCommit = ChunkedPoseidonP256(userRsaExtractedModulus ‖ pkBlind)`,
    where `pkBlind` is a per-session uniform 248-bit value sampled by the
    prover. The same value is used in Circuit B; the verifier checks
    `pkCommit_A == pkCommit_B`. See §"Why per-session randomness for `pkBlind`"
@@ -173,6 +175,34 @@ third extension pins the certificate's key usage.
 Certificates with a different extension order, without keyUsage, with an
 Extensions block shorter than 256 bytes, or with a public exponent other than
 65537 are rejected.
+
+## Primary card
+
+A person can hold more than one MOICA signing certificate: the primary card,
+a secondary card, and a mobile certificate whose key lives on a phone. Each
+has its own key, so each would yield its own `nullifier` per app.
+
+MOICA marks the last two in the certificate. The subjectDirectoryAttributes
+extension carries an optional attribute `cardHolderRank`
+(`2.16.886.1.100.2.2`) with the value `secondary` or `mobile`; a primary
+card's certificate does not have it (GPKI Certificate and CRL Profiles v2.4,
+§1.3.18).
+
+Circuit A requires the two extensions after keyUsage to be:
+
+- certificatePolicies with the single policy `2.16.886.101.0.3.3`;
+- subjectDirectoryAttributes with exactly two attributes, in this order:
+  `subjectType` = citizen (`2.16.886.1.100.3.1.1`) and `tailOfPersonalID`
+  (`2.16.886.1.100.2.51`) as a 4-byte UTF8String.
+
+Every byte of the two extensions is pinned except the 4-byte
+`tailOfPersonalID` value, which fixes the length of
+subjectDirectoryAttributes and leaves no room for `cardHolderRank`.
+
+Certificates with `cardHolderRank`, with another policy, with the attributes
+in another order, or without either extension in this position are rejected.
+Certificates issued to alien residents (`subjectType` `...3.1.9`) are
+rejected: they share the layout but differ in that one byte.
 
 ## Why per-session randomness for `pkBlind`
 
